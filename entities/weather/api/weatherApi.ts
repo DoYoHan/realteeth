@@ -18,16 +18,18 @@ export async function getWeatherByCoords(
 
   const data = await fetcher<OpenMeteoResponse>(url);
 
+  const hourly = data.hourly.time.map(
+    (time, idx) => ({
+      time,
+      temperature: data.hourly.temperature_2m[idx],
+    })
+  );
+
   return {
     currentTemperature: data.current.temperature_2m,
     weatherCode: data.current.weather_code,
-
     minTemperature: data.daily.temperature_2m_min[0],
     maxTemperature: data.daily.temperature_2m_max[0],
-
-    hourly: data.hourly.time.map((time, idx) => ({
-      time,
-      temperature: data.hourly.temperature_2m[idx],
-    })),
+    hourly,
   };
 }

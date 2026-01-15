@@ -6,5 +6,5 @@ export async function fetcher<T>(url: string): Promise<T> {
     throw new Error("API Error");
   }
 
-  return res.json();
+  return res.json() as Promise<T>;
 }
