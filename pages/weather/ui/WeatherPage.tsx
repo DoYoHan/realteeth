@@ -8,9 +8,14 @@ import { geocodeLocation } from "@/entities/location/api/geocode";
 import Loader from "@/shared/ui/Loader";
 import { LocationSearch } from "@/features/location-search/ui/LocationSearch";
 import { getTopRegion } from "@/entities/location/lib/normalizeLocation";
+import { useFavorites } from "@/features/favorite-location/model/useFavorites";
+import { v4 as uuid } from "uuid";
+import { FavoriteCard } from "@/features/favorite-location/ui/FavoriteCard";
 
 // Page 조립
 export default function WeatherPage() {
+  const { favorites, addFavorite, removeFavorite, updateAlias } = useFavorites();
+
   const [currentRegion, setCurrentRegion] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -34,6 +39,13 @@ export default function WeatherPage() {
     { enabled: !!coords }
   );
 
+  // 즐겨찾기 중복 확인
+  const isAlreadyFavorite =
+    !!coords &&
+    favorites.some(
+      (f) => f.lat === coords.lat && f.lon === coords.lon
+    );
+
   useEffect(() => {
     if (detectedLocation && !manualCoords) {
       setCurrentRegion("내 위치");
@@ -53,6 +65,49 @@ export default function WeatherPage() {
             📍 {currentRegion ? getTopRegion(currentRegion) : "내 위치"}
           </h2>
           <p className="text-sm text-gray-500">현재 조회 중인 지역</p>
+          <button
+            disabled={isAlreadyFavorite}
+            onClick={() =>
+              addFavorite({
+                id: uuid(),
+                name: currentRegion!,
+                alias: getTopRegion(currentRegion!),
+                lat: coords!.lat,
+                lon: coords!.lon,
+              })
+            }
+            className={`
+              mt-2
+              inline-flex items-center gap-1
+              rounded-lg
+              px-3 py-1.5
+              text-sm font-medium
+              shadow
+              transition
+              ${isAlreadyFavorite
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-sky-500 text-white cursor-pointer hover:bg-sky-600 active:scale-95"
+              }
+            `}
+          >
+            {isAlreadyFavorite ? "⭐ 이미 즐겨찾기됨" : "⭐ 즐겨찾기 추가"}
+          </button>
+        </div>
+
+        {/* 즐겨찾기 지역 목록 */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {favorites.map((fav) => (
+            <FavoriteCard
+              key={fav.id}
+              favorite={fav}
+              onClick={() => {
+                setManualCoords({ lat: fav.lat, lon: fav.lon });
+                setCurrentRegion(fav.name);
+              }}
+              onRemove={() => removeFavorite(fav.id)}
+              onRename={(name) => updateAlias(fav.id, name)}
+            />
+          ))}
         </div>
 
         {/* 지역 검색 */}
