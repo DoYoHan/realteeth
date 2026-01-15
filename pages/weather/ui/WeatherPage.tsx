@@ -11,6 +11,7 @@ import { getTopRegion } from "@/entities/location/lib/normalizeLocation";
 import { useFavorites } from "@/features/favorite-location/model/useFavorites";
 import { v4 as uuid } from "uuid";
 import { FavoriteCard } from "@/features/favorite-location/ui/FavoriteCard";
+import { HourlyTemperatureChart } from "@/features/show-hourly-temperature/ui/HourlyTemperatureChart";
 
 // Page 조립
 export default function WeatherPage() {
@@ -36,7 +37,7 @@ export default function WeatherPage() {
   const { data: weather, isLoading } = useWeatherQuery(
     coords?.lat ?? 0,
     coords?.lon ?? 0,
-    { enabled: !!coords }
+    { enabled: !!coords, }
   );
 
   // 즐겨찾기 중복 확인
@@ -159,6 +160,11 @@ export default function WeatherPage() {
               <h3 className="text-lg font-semibold mb-3 text-sky-600">
                 ⏰ 시간대별 기온
               </h3>
+
+              {/* 그래프 */}
+              <HourlyTemperatureChart hourly={weather.hourly} />
+
+              {/* 리스트 */}
               <ul className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                 {weather.hourly.slice(0, 24).map((hour) => (
                   <li
